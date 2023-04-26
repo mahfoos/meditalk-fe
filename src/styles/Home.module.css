@@ -12,9 +12,9 @@
 }
 
 .main {
-  padding-top: 64px; /* Adjust this value based on the height of your AppBar */
+  padding-top: 64px; 
+  flex: 1;
 }
-
 
 .container {
   display: flex;
@@ -22,24 +22,10 @@
   min-height: 100vh;
 }
 
-.main {
-  flex: 1;
-}
-
 .footer {
   padding: 16px;
 }
 
-
-.footer img {
-  margin-left: 0.5rem;
-}
-
-.footer a {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
 .title {
   margin: 0;

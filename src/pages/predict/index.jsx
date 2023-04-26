@@ -29,6 +29,20 @@ export default function Predict() {
           <div className={styles.card}>
             <PredictForm />
           </div>
+          <Box sx={{ marginTop: 3 }}>
+        <Typography variant="body1">
+          <strong>Low severity:</strong> is not serious and is likely to resolve with minimal
+          intervention.
+        </Typography>
+        <Typography variant="body1">
+          <strong>Medium severity:</strong> requires some attention and treatment, but is not
+          life-threatening or urgent.
+        </Typography>
+        <Typography variant="body1">
+          <strong>High severity:</strong> requires urgent attention, and may be life-threatening if
+          not addressed promptly.
+        </Typography>
+      </Box>
         </div>
       </main>
 
