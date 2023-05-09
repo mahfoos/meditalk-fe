@@ -1,21 +1,44 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { TextField, Button, Typography, CircularProgress, Box, Paper } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Typography,
+  CircularProgress,
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
 
 const SummarizeForm = () => {
   const [text, setText] = useState('');
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [modalError, setModalError] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!text.trim()) {
+      setErrorMessage('Please enter the text to be summarized.');
+      return;
+    }
+
+    setErrorMessage('');
     setLoading(true);
+    setOpen(true);
 
     try {
       const response = await axios.post('/api/summarize', { text });
       setSummary(response.data.summary);
+      setModalError(false);
     } catch (error) {
       console.error('Error while fetching summary:', error);
+      setModalError(true);
     }
 
     setLoading(false);
@@ -24,6 +47,11 @@ const SummarizeForm = () => {
   const handleClear = () => {
     setText('');
     setSummary('');
+    setOpen(false);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
   };
 
   return (
@@ -38,13 +66,11 @@ const SummarizeForm = () => {
           fullWidth
           margin="normal"
           variant="outlined"
-          InputProps={{
-            style: {
-              backgroundColor: 'white',
-              borderRadius: '5px',
-            },
-          }}
+          error={!!errorMessage}
+          helperText={errorMessage}
+          sx={{ width: '90%' }} // Set the width of the TextField component to 75%
         />
+
         <Button
           type="submit"
           variant="contained"
@@ -57,24 +83,32 @@ const SummarizeForm = () => {
         <Button variant="outlined" color="secondary" onClick={handleClear} disabled={loading} sx={{ marginTop: 2 }}>
           Clear
         </Button>
-        {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
-            <CircularProgress />
-          </Box>
-        )}
       </form>
-      {summary && (
-        <Box sx={{ marginTop: 3 }}>
-          <Typography variant="h6" component="div" gutterBottom>
-            Summary:
-          </Typography>
-          <Paper elevation={1} sx={{ padding: 2, backgroundColor: '#f5f5f5' }}>
-            <Typography variant="body1">
-              {summary}
+
+      <Dialog onClose={handleClose} open={open}>
+        <DialogTitle>Summary</DialogTitle>
+        <DialogContent>
+          {modalError ? (
+            <Typography variant="body1" color="error">
+              An error occurred. Please add correctly formatted text.
             </Typography>
-          </Paper>
-        </Box>
-      )}
+          ) : loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <Typography variant="body1">{summary}</Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClear} color="primary">
+            Clear
+          </Button>
+          <Button onClick={handleClose} color="secondary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

@@ -1,37 +1,77 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { TextField, Button, Typography, CircularProgress, Box, Paper } from '@mui/material';
+import {
+  TextField,
+  Button,
+  Typography,
+  CircularProgress,
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material';
 
 const PredictForm = () => {
   const [text, setText] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [loadingText, setLoadingText] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [modalErrorMessage, setModalErrorMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!text.trim()) {
+      setErrorMessage('Please enter the text to be predict the severity.');
+      return;
+    }
+
+    setErrorMessage('');
     setLoading(true);
+    setLoadingText(true);
 
     try {
       const response = await axios.post('/api/predict', { text });
-      setResult(`Severity: ${response.data.severity}`);
+      setTimeout(() => {
+        setResult(`Severity: ${response.data.severity}`);
+        setLoadingText(false);
+        setModalErrorMessage('');
+      }, 3000); // Add a 3-second delay
     } catch (error) {
       console.error('Error while fetching prediction:', error);
+      setLoadingText(false);
+      if (error.response && error.response.status === 500) {
+        setModalErrorMessage('Please enter summarized text.');
+      } else {
+        setModalErrorMessage('An error occurred while processing your request.');
+      }
     }
 
     setLoading(false);
+    setOpen(true);
   };
 
   const handleClear = () => {
     setText('');
     setResult('');
+    setErrorMessage('');
+    setModalErrorMessage('');
+    setOpen(false);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
   };
 
   const severityColor = () => {
-    if (result.includes('low severity')) {
+    if (result.includes('Low Severity')) {
       return 'green';
-    } else if (result.includes('medium severity')) {
+    } else if (result.includes('Medium Severity')) {
       return 'orange';
-    } else if (result.includes('high severity')) {
+    } else if (result.includes('High Severity')) {
       return 'red';
     } else {
       return 'inherit';
@@ -50,6 +90,8 @@ const PredictForm = () => {
           fullWidth
           margin="normal"
           variant="outlined"
+          error={!!errorMessage}
+          helperText={errorMessage}
         />
         <Button type="submit" variant="contained" color="primary" disabled={loading} sx={{ marginRight: 1 }}>
           Predict Severity
@@ -58,17 +100,31 @@ const PredictForm = () => {
           Clear
         </Button>
       </form>
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: 2 }}>
-          <CircularProgress />
-        </Box>
-      )}
-      {result && (
-        <Paper elevation={1} sx={{ padding: 2, marginTop: 3, backgroundColor: severityColor() }}>
-          <Typography variant="h6">{result}</Typography>
-        </Paper>
-      )}
-      
+
+      <Dialog onClose={handleClose} open={open}>
+        <DialogTitle>Predicted Severity</DialogTitle>
+        <DialogContent>
+          {loadingText ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <CircularProgress />
+            </Box>
+          ) : modalErrorMessage ? (
+            <Typography variant="body1" sx={{ color: 'red' }}>
+              {modalErrorMessage}
+            </Typography>
+          ) : (
+            <Typography variant="body1" sx={{ color: severityColor() }}>
+              {result}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClear}></Button>
+          <Button onClick={handleClose} color="secondary">
+          Close
+        </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };
